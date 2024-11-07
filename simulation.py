@@ -180,9 +180,8 @@ parameters = {
     'seed': 42
 }
 
-# Crear y ejecutar el modelo
+# Crear el modelo (no ejecutar model.run())
 model = HarvestModel(parameters)
-results = model.run()
 
 # Visualización
 def plot_field(model, ax):
