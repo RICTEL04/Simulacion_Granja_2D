@@ -1,6 +1,7 @@
 import agentpy as ap
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 from TractorAgent import TractorAgent 
 
 # Definir la clase del modelo
@@ -89,7 +90,36 @@ class HarvestModel(ap.Model):
                 if pos in self.parcels_ready:
                     self.parcels_ready.remove(pos)
 
+    def plot_tractor_data(self):
+        for i, tractor in enumerate(self.tractors):
+            fig, ax = plt.subplots(2, 1, figsize=(10, 8))
+            
+            # Fuel level over time
+            ax[0].plot(tractor.fuel_levels, label='Nivel de Combustible')
+            ax[0].set_title(f'Tractor {i + 1} - Nivel de Combustible')
+            ax[0].set_xlabel('Paso de Tiempo')
+            ax[0].set_ylabel('Combustible')
+            
+            # Load over time
+            ax[1].plot(tractor.loads, label='Carga')
+            ax[1].set_title(f'Tractor {i + 1} - Carga')
+            ax[1].set_xlabel('Paso de Tiempo')
+            ax[1].set_ylabel('Carga')
+            
+            plt.tight_layout()
+
+            # Save the figure as a JPEG
+            filename = f"tractor_{i + 1}_data.jpeg"
+            plt.savefig(filename, format="jpeg")
+            print(f"Saved plot for Tractor {i + 1} as {filename}")
+
+            # Optionally, close the figure to free up memory if running many tractors
+            plt.close(fig)
+
+
     def end(self):
         # Al final de la simulación
+        # After running the simulation, plot data
+        self.plot_tractor_data()
         total_harvested = np.sum(self.state_grid == 'harvested')
         self.report('Total parcels harvested', total_harvested)

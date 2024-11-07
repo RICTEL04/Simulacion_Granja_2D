@@ -25,9 +25,8 @@ parameters = {
     'steps': 100,
     'seed': 42
 }
-
-# Crear el modelo (no ejecutar model.run())
 model = HarvestModel(parameters)
+# model.run()  # Descomentar esto para generar graficas
 
 # Visualización
 def plot_field(model, ax):
@@ -75,7 +74,6 @@ def plot_field(model, ax):
     # Add the legend to the plot
     ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5), title="Leyenda")
 
-
     # Add grid lines and other plot details
     ax.set_xticks(np.arange(-0.5, model.p['field_size'], 1), minor=True)
     ax.set_yticks(np.arange(-0.5, model.p['field_size'], 1), minor=True)
@@ -86,12 +84,13 @@ def plot_field(model, ax):
     ax.set_xticks([])
     ax.set_yticks([])
 
-
+# Create the animation using the tracked data
 fig, ax = plt.subplots(figsize=(8,6))
 fig.tight_layout(rect=[0, 0, 0.85, 1])  # Add space on the right for the legend
+
 animation = ap.animate(model, fig, ax, plot_field)
 
-# Guardar la animación como un archivo MP4
-animation.save("harvest_simulation.mp4", writer="ffmpeg")
+# Save the animation as an MP4 file with a duration that reflects the number of frames
+animation.save("harvest_simulation.mp4", writer="ffmpeg", fps=5)  # Adjust fps as needed for smoother video
 
 print("Animación guardada como 'harvest_simulation.mp4'")
