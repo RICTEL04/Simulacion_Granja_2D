@@ -23,20 +23,23 @@ class HarvestModel(ap.Model):
                 # Asignar 'ready_to_harvest' con un 90% de probabilidad y 'empty' con un 10%
                 if random.random() < 0.9:
                     self.state_grid[x, y] = 'ready_to_harvest'
+                    self.parcels_ready.append((x, y))  # Add parcel position to parcels_ready
+
                 else:
                     self.state_grid[x, y] = 'empty'
 
 
         # Crear los tractores
         self.tractors = ap.AgentList(self, self.p.num_tractors, TractorAgent)
+        self.grid.add_agents(self.tractors, random=True)  # `random=True` will place agents in random empty cells
 
-        # Colocar los tractores aleatoriamente en la cuadrícula
-        empty_cells = [pos for pos in self.grid.empty if self.grid.agents[pos] is None]
+         # Confirm placement by printing the positions of each tractor
+        for tractor in self.tractors:
+            if tractor in self.grid.positions:
+                print(f"Tractor {tractor} placed at {self.grid.positions[tractor]}")
+            else:
+                print(f"Warning: Tractor {tractor} was not assigned a position.")
 
-        num_tractors = min(len(empty_cells), len(self.tractors))  # Limitar el número de tractores si es necesario
-
-        tractor_positions = self.random.sample(empty_cells, num_tractors)
-        self.grid.add_agents(self.tractors[:num_tractors], positions=tractor_positions)
 
         # Establecer la semilla aleatoria para reproducibilidad
         self.random.seed(self.p.seed)
@@ -47,7 +50,7 @@ class HarvestModel(ap.Model):
 
     def step(self):
         # Eventos aleatorios (crecimiento y marchitamiento de cultivos)
-        self.random_events()
+        # Por ahora inhabilitados los random events, por cambiarse => self.random_events()
         # Cada tractor realiza su movimiento
         for tractor in self.tractors:
             tractor.move()
