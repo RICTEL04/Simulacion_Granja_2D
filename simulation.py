@@ -45,8 +45,14 @@ class TractorAgent(ap.Agent):
                 # No hay parcelas para cosechar, permanecer en su lugar
                 return
 
+        # Obtener la posición actual del tractor
+        if self in self.grid.positions:  # Verificar si el tractor tiene una posición asignada
+            current_pos = self.grid.positions[self]
+        else:
+            return  # Si el tractor no tiene posición, salir de la función
+
         # Encontrar la ruta más corta hacia el objetivo, evitando otros agentes
-        path = self.grid.shortest_path(self.position, target, avoid_agents=True)
+        path = self.grid.shortest_path(current_pos, target, avoid_agents=True)
         if len(path) > 1:
             # Moverse al siguiente paso en el camino
             next_position = path[1]
@@ -71,13 +77,17 @@ class TractorAgent(ap.Agent):
         parcels = self.model.parcels_ready
         if not parcels:
             return None
-        distances = [self.grid.distance(self.position, p) for p in parcels]
+        if self in self.grid.positions:  # Verificar si el tractor tiene una posición asignada
+            current_pos = self.grid.positions[self]
+        else:
+            return None  # Si el tractor no tiene posición, regresar None
+        distances = [self.grid.distance(current_pos, p) for p in parcels]
         nearest_parcel = parcels[np.argmin(distances)]
         return nearest_parcel
 
     def harvest(self, parcel_pos):
         # Cosechar la parcela en la posición dada
-        self.grid.attr(parcel_pos)['state'] = 'harvested'
+        self.model.state_grid[parcel_pos] = 'harvested'
         self.load += self.p.harvest_amount
         self.model.parcels_ready.remove(parcel_pos)
 
@@ -93,17 +103,20 @@ class TractorAgent(ap.Agent):
 class HarvestModel(ap.Model):
 
     def setup(self):
-        # Crear la cuadrícula
-        self.grid = ap.Grid(self, [self.p.field_size, self.p.field_size], track_empty=True)
+        # Crear la cuadrícula con track_agents=True
+        self.grid = ap.Grid(self, [self.p.field_size, self.p.field_size], track_empty=True, track_agents=True)
+
+        # Crear la matriz de estados de las celdas
+        self.state_grid = np.full(self.grid.shape, 'empty', dtype=object)
 
         # Establecer aleatoriamente algunas parcelas como 'ready_to_harvest'
         self.parcels_ready = []
         for pos in self.grid.positions:
             if random.random() < self.p.initial_ready_fraction:
-                self.grid.attr(pos)['state'] = 'ready_to_harvest'
+                self.state_grid[pos] = 'ready_to_harvest'
                 self.parcels_ready.append(pos)
             else:
-                self.grid.attr(pos)['state'] = 'empty'
+                self.state_grid[pos] = 'empty'
 
         # Crear los tractores
         self.tractors = ap.AgentList(self, self.p.num_tractors, TractorAgent)
@@ -113,12 +126,12 @@ class HarvestModel(ap.Model):
         tractor_positions = self.random.sample(empty_cells, num_tractors)
         self.grid.add_agents(self.tractors[:num_tractors], positions=tractor_positions)
 
+        # Establecer la semilla aleatoria para reproducibilidad
+        self.random.seed(self.p.seed)
+
         # Definir el punto de descarga y la estación de recarga
         self.unload_point = (0, 0)  # Puede ajustarse a cualquier posición
         self.refuel_station = (self.p.field_size - 1, self.p.field_size - 1)  # Esquina opuesta
-
-        # Establecer la semilla aleatoria para reproducibilidad
-        self.random.seed(self.p.seed)
 
     def step(self):
         # Eventos aleatorios (crecimiento y marchitamiento de cultivos)
@@ -132,20 +145,20 @@ class HarvestModel(ap.Model):
     def random_events(self):
         # Simular eventos aleatorios que afectan al campo
         for pos in self.grid.positions:
-            state = self.grid.attr(pos)['state']
+            state = self.state_grid[pos]
             if state == 'empty' and random.random() < self.p.growth_chance:
                 # La parcela vacía tiene una probabilidad de crecer un cultivo
-                self.grid.attr(pos)['state'] = 'ready_to_harvest'
+                self.state_grid[pos] = 'ready_to_harvest'
                 self.parcels_ready.append(pos)
             elif state == 'ready_to_harvest' and random.random() < self.p.wither_chance:
                 # El cultivo listo para cosechar tiene una probabilidad de marchitarse
-                self.grid.attr(pos)['state'] = 'empty'
+                self.state_grid[pos] = 'empty'
                 if pos in self.parcels_ready:
                     self.parcels_ready.remove(pos)
 
     def end(self):
         # Al final de la simulación
-        total_harvested = sum(1 for pos in self.grid.positions if self.grid.attr(pos)['state'] == 'harvested')
+        total_harvested = np.sum(self.state_grid == 'harvested')
         self.report('Total parcels harvested', total_harvested)
 
 # Definir los parámetros
@@ -177,12 +190,13 @@ def plot_field(model, ax):
     state_colors = {'empty': 0, 'ready_to_harvest': 1, 'harvested': 2}
     parcel_grid = np.zeros(grid.shape)
     for pos in grid.positions:
-        state = grid.attr(pos)['state']
+        state = model.state_grid[pos]
         parcel_grid[pos] = state_colors[state]
-    cmap = plt.cm.get_cmap('YlGn')
+    # Usar el mapa de colores correctamente
+    cmap = plt.cm.YlGn
     ax.imshow(parcel_grid.T, cmap=cmap, origin='lower')
-    x_coords = [agent.position[0] for agent in model.tractors]
-    y_coords = [agent.position[1] for agent in model.tractors]
+    x_coords = [model.grid.positions[agent][0] for agent in model.tractors if agent in model.grid.positions]
+    y_coords = [model.grid.positions[agent][1] for agent in model.tractors if agent in model.grid.positions]
     ax.scatter(x_coords, y_coords, c='red', s=100, label='Tractores')
     ax.legend(loc='upper right')
     ax.set_title(f"Paso {model.t}")
