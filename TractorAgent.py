@@ -18,8 +18,14 @@ class TractorAgent(ap.Agent):
         self.repair_time = 0  # Tiempo de reparación restante
         self.grid = self.model.grid  # Referencia a la cuadrícula del modelo
 
+        # Agregar más si es necesario para graficar
+        self.fuel_levels = []
+        self.loads = []
+
     def move(self):
         print(f"Tractor {self} at {self.grid.positions.get(self, 'Not on grid')}, Load: {self.load}, Fuel: {self.fuel_level}, Broken: {self.broken_down}")
+        self.fuel_levels.append(self.fuel_level)
+        self.loads.append(self.load)
 
         # Método para mover el tractor en cada paso de tiempo
         if self.broken_down:
@@ -113,6 +119,7 @@ class TractorAgent(ap.Agent):
         # Recargar combustible en la estación de recarga
         self.fuel_level = self.p.max_fuel
     
+    # No consideré la posibilidad de choques con otros agentes
     def a_star_path(self, start, goal):
         # A* algorithm implementation
         open_set = []
