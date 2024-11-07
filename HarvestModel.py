@@ -7,46 +7,61 @@ from TractorAgent import TractorAgent
 class HarvestModel(ap.Model):
 
     def setup(self):
-        # Crear la cuadrícula con track_agents=True
+        # Set up the grid with a perimeter and a harvestable inner area
         self.grid = ap.Grid(self, [self.p.field_size, self.p.field_size], track_empty=True, track_agents=True)
-        # self.grid = ap.Grid(self, [20, 20], track_empty=True, track_agents=True)
         
-        ## CULTIVOS
-        # Crear la matriz de estados de las celdas
+        # Initialize the grid state
         self.state_grid = np.full(self.grid.shape, 'empty', dtype=object)
-
-        # Se cambio esto ya que self.grid.positions es para agentes
-        # Establecer aleatoriamente algunas parcelas como 'ready_to_harvest'
         self.parcels_ready = []
-        for x in range(self.grid.shape[0]):  # Recorrer las filas (y)
-            for y in range(self.grid.shape[1]):  # Recorrer las columnas (x)
-                # Asignar 'ready_to_harvest' con un 90% de probabilidad y 'empty' con un 10%
+
+        # Define the perimeter width
+        perimeter_width = 1
+
+        # Populate the inner area with crops, leaving the perimeter empty
+        for x in range(perimeter_width, self.grid.shape[0] - perimeter_width):
+            for y in range(perimeter_width, self.grid.shape[1] - perimeter_width):
                 if random.random() < 0.9:
                     self.state_grid[x, y] = 'ready_to_harvest'
-                    self.parcels_ready.append((x, y))  # Add parcel position to parcels_ready
-
+                    self.parcels_ready.append((x, y))
                 else:
                     self.state_grid[x, y] = 'empty'
 
+        # Gather perimeter cells
+        perimeter_cells = []
+        grid_size = self.grid.shape[0]
 
-        # Crear los tractores
+        # Top and bottom rows
+        for x in range(grid_size):
+            perimeter_cells.append((x, 0))                # Top row
+            perimeter_cells.append((x, grid_size - 1))    # Bottom row
+
+        # Left and right columns
+        for y in range(1, grid_size - 1):  # Avoid adding corners twice
+            perimeter_cells.append((0, y))                # Left column
+            perimeter_cells.append((grid_size - 1, y))    # Right column
+
+        # Place tractors randomly on the perimeter
         self.tractors = ap.AgentList(self, self.p.num_tractors, TractorAgent)
-        self.grid.add_agents(self.tractors, random=True)  # `random=True` will place agents in random empty cells
+        tractor_positions = random.sample(perimeter_cells, len(self.tractors))
+        self.grid.add_agents(self.tractors, positions=tractor_positions)
 
-         # Confirm placement by printing the positions of each tractor
         for tractor in self.tractors:
             if tractor in self.grid.positions:
                 print(f"Tractor {tractor} placed at {self.grid.positions[tractor]}")
             else:
                 print(f"Warning: Tractor {tractor} was not assigned a position.")
 
-
-        # Establecer la semilla aleatoria para reproducibilidad
         self.random.seed(self.p.seed)
 
-        # Definir el punto de descarga y la estación de recarga
-        self.unload_point = (0, 0)  # Puede ajustarse a cualquier posición
-        self.refuel_station = (self.p.field_size - 1, self.p.field_size - 1)  # Esquina opuesta
+
+        # Set a refuel station at a random perimeter position
+        self.refuel_station = random.choice(perimeter_cells)
+
+        print(f"Refuel station set at: {self.refuel_station}")
+
+        # Set an unload point on the opposite side of the grid
+        self.unload_point = random.choice(perimeter_cells)
+        print(f"Unload point set at: {self.unload_point}")
 
     def step(self):
         # Eventos aleatorios (crecimiento y marchitamiento de cultivos)
