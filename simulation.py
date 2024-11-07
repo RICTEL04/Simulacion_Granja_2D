@@ -51,8 +51,8 @@ def plot_field(model, ax):
     ax.imshow(state_grid_numeric, cmap=cmap, norm=norm)
 
     # Plot tractor positions
-    x_coords = [model.grid.positions[agent][0] for agent in model.tractors if agent in model.grid.positions]
-    y_coords = [model.grid.positions[agent][1] for agent in model.tractors if agent in model.grid.positions]
+    x_coords = [model.grid.positions[agent][1] for agent in model.tractors if agent in model.grid.positions]
+    y_coords = [model.grid.positions[agent][0] for agent in model.tractors if agent in model.grid.positions]
     ax.scatter(x_coords, y_coords, c='red', s=100, label='Tractores')
 
     # Custom legend for the plot
