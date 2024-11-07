@@ -52,8 +52,11 @@ class HarvestModel(ap.Model):
             else:
                 print(f"Warning: Tractor {tractor} was not assigned a position.")
 
-        self.random.seed(self.p.seed)
+        # Assign sections to tractors
+        for i, tractor in enumerate(self.tractors):
+            tractor.assign_section(i)
 
+        self.random.seed(self.p.seed)
 
         # Set a refuel station at a random perimeter position
         self.refuel_station = random.choice(perimeter_cells)
@@ -68,13 +71,13 @@ class HarvestModel(ap.Model):
         print(f"Unload point set at: {self.unload_point}")
 
     def step(self):
-        # Eventos aleatorios (crecimiento y marchitamiento de cultivos)
-        # Por ahora inhabilitados los random events, por cambiarse => self.random_events()
-        # Cada tractor realiza su movimiento
         for tractor in self.tractors:
             tractor.move()
-        # Actualizar los datos recolectados
+        
         self.record('Parcels left to harvest', len(self.parcels_ready))
+        
+        if len(self.parcels_ready) == 0 and all(self.grid.positions[tractor] == self.unload_point for tractor in self.tractors):
+            self.stop()
 
     def random_events(self):
         # Simular eventos aleatorios que afectan al campo
@@ -115,7 +118,6 @@ class HarvestModel(ap.Model):
 
             # Optionally, close the figure to free up memory if running many tractors
             plt.close(fig)
-
 
     def end(self):
         # Al final de la simulación

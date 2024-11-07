@@ -17,6 +17,7 @@ class TractorAgent(ap.Agent):
         self.broken_down = False  # Estado del tractor (averiado o no)
         self.repair_time = 0  # Tiempo de reparación restante
         self.grid = self.model.grid  # Referencia a la cuadrícula del modelo
+        self.section = None
 
         # Agregar más si es necesario para graficar
         self.fuel_levels = []
@@ -47,6 +48,10 @@ class TractorAgent(ap.Agent):
             # Si el combustible es bajo, ir a la estación de recarga
             target = self.model.refuel_station
 
+        elif len(self.model.parcels_ready) == 0:
+            # Si no hay parcelas listas para cosechar, ir al punto de descarga
+            target = self.model.unload_point
+
         else:
             # Buscar la parcela más cercana lista para cosechar
             target = self.find_nearest_parcel()
@@ -55,7 +60,7 @@ class TractorAgent(ap.Agent):
                 print("No hay parcelas para cosechar")
                 return
 
-        # Obtener la posición actual del tractoe
+        # Obtener la posición actual del tractor
         if self in self.grid.positions:  # Verificar si el tractor tiene una posición asignada
             current_pos = self.grid.positions[self]
         else:
@@ -84,22 +89,36 @@ class TractorAgent(ap.Agent):
                 else:
                     self.harvest(target)
 
+    def assign_section(self, section):
+        self.section = section
+
     def find_nearest_parcel(self):
-        # Encontrar la parcela más cercana lista para cosechar
-        parcels = self.model.parcels_ready
+        # Encontrar la parcela más cercana lista para cosechar en la sección asignada
+        if self.section is None:
+            return None
+
+        parcels = [p for p in self.model.parcels_ready if self.is_in_section(p)]
         if not parcels:
             return None
-        
+
         # Verificar si el tractor tiene una posición asignada
-        if self in self.grid.positions:  
+        if self in self.grid.positions:
             current_pos = self.grid.positions[self]
         else:
             return None  # Si el tractor no tiene posición, regresar None
-        
+
         distances = [self.get_distance(current_pos, p) for p in parcels]
         nearest_parcel = parcels[np.argmin(distances)]
 
         return nearest_parcel
+
+    def is_in_section(self, pos):
+        # Verificar si una posición está en la sección asignada
+        section_size = self.model.grid.shape[0] // self.model.p.num_tractors
+        section_start = self.section * section_size
+        section_end = section_start + section_size
+        return section_start <= pos[0] < section_end
+
 
     # Asumiendo que movimientos en diagonal no están permitidos. Si sí, cambiar esto a Euclidian 
     def get_distance(self, pos1, pos2):

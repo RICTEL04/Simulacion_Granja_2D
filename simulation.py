@@ -11,18 +11,18 @@ from HarvestModel import HarvestModel
 parameters = {
     'field_size': 20,
     'num_tractors': 3,
-    'capacity': 10,
-    'max_fuel': 100,
+    'capacity': 30,
+    'max_fuel': 500,
     'fuel_consumption_rate': 1,
     'fuel_threshold': 10,
-    'speed': 1,
+    'speed': 2,
     'harvest_amount': 1,
     'initial_ready_fraction': 0.2,
     'breakdown_chance': 0.01,
     'repair_steps': 3,
     'growth_chance': 0.01,
     'wither_chance': 0.005,
-    'steps': 100,
+    'steps': 240,
     'seed': 42
 }
 model = HarvestModel(parameters)
