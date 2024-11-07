@@ -3,7 +3,6 @@ import agentpy as ap
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-import matplotlib.animation  # Para guardar la animación
 
 # Definir la clase del agente Tractor
 class TractorAgent(ap.Agent):
@@ -182,27 +181,32 @@ parameters = {
 
 # Crear el modelo (no ejecutar model.run())
 model = HarvestModel(parameters)
-
 # Visualización
 def plot_field(model, ax):
-    grid = model.grid
-    state_colors = {'empty': 0, 'ready_to_harvest': 1, 'harvested': 2}
-    parcel_grid = np.zeros(grid.shape)
-    for pos in grid.positions:
-        state = model.state_grid[pos]
-        parcel_grid[pos] = state_colors[state]
-    # Usar el mapa de colores correctamente
-    cmap = plt.cm.YlGn
-    ax.imshow(parcel_grid.T, cmap=cmap, origin='lower')
+    ax.clear()  # Limpiar el eje al inicio
+
+    # Generate a color-mapped grid from the `state_grid`
+    state_grid = np.vectorize({
+        'empty': 0,
+        'ready_to_harvest': 1,
+        'harvested': 2
+    }.get)(model.state_grid)
+    
+    # Plot the grid with colors for each state
+    ap.gridplot(state_grid, cmap='YlGn', ax=ax)
+    
+    # Add tractor positions to the plot
     x_coords = [model.grid.positions[agent][0] for agent in model.tractors if agent in model.grid.positions]
     y_coords = [model.grid.positions[agent][1] for agent in model.tractors if agent in model.grid.positions]
     ax.scatter(x_coords, y_coords, c='red', s=100, label='Tractores')
+    
+    # Add a title and other plot details
     ax.legend(loc='upper right')
     ax.set_title(f"Paso {model.t}")
     ax.set_xticks([])
     ax.set_yticks([])
 
-# Crear la animación y guardarla como archivo MP4
+
 fig, ax = plt.subplots(figsize=(6,6))
 animation = ap.animate(model, fig, ax, plot_field)
 
