@@ -53,7 +53,8 @@ def plot_field(model, ax):
     state_grid_numeric = np.vectorize(state_to_int.get)(model.state_grid).astype(int)
     #print(model.state_grid)
     # Crear el cmap con los colores correspondientes
-    cmap = mcolors.ListedColormap(['#d2b48c', 'green', 'gray'])  
+    cmap = mcolors.ListedColormap(['#d2b48c', 'green', 'gray'])
+
     bounds = [0, 1, 2, 3]  # Definir límites para los valores de los estados
     norm = mcolors.BoundaryNorm(bounds, cmap.N)
 

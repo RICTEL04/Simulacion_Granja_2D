@@ -19,6 +19,8 @@ class TractorAgent(ap.Agent):
         self.grid = self.model.grid  # Referencia a la cuadrícula del modelo
 
     def move(self):
+        print(f"Tractor {self} at {self.grid.positions.get(self, 'Not on grid')}, Load: {self.load}, Fuel: {self.fuel_level}, Broken: {self.broken_down}")
+
         # Método para mover el tractor en cada paso de tiempo
         if self.broken_down:
             # Si el tractor está averiado, reducir el tiempo de reparación
@@ -44,16 +46,19 @@ class TractorAgent(ap.Agent):
             target = self.find_nearest_parcel()
             if target is None:
                 # No hay parcelas para cosechar, permanecer en su lugar
+                print("No hay parcelas para cosechar")
                 return
 
         # Obtener la posición actual del tractoe
         if self in self.grid.positions:  # Verificar si el tractor tiene una posición asignada
             current_pos = self.grid.positions[self]
         else:
+            print("Tractor sin posición")
             return  # Si el tractor no tiene posición, salir de la función
 
         # Encontrar la ruta más corta hacia el objetivo (A*)
         path = self.a_star_path(current_pos, target)
+        print("Path:   ", path)
         if len(path) > 1:
             # Moverse al siguiente paso en el camino
             next_position = path[1]
