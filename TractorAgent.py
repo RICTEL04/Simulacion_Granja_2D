@@ -2,6 +2,7 @@
 import agentpy as ap
 import numpy as np
 import random
+import heapq
 
 # Definir la clase del agente Tractor
 class TractorAgent(ap.Agent):
@@ -51,8 +52,8 @@ class TractorAgent(ap.Agent):
         else:
             return  # Si el tractor no tiene posición, salir de la función
 
-        # Encontrar la ruta más corta hacia el objetivo, evitando otros agentes
-        path = self.grid.shortest_path(current_pos, target, avoid_agents=True)
+        # Encontrar la ruta más corta hacia el objetivo (A*)
+        path = self.a_star_path(current_pos, target)
         if len(path) > 1:
             # Moverse al siguiente paso en el camino
             next_position = path[1]
@@ -84,10 +85,14 @@ class TractorAgent(ap.Agent):
         else:
             return None  # Si el tractor no tiene posición, regresar None
         
-        distances = [self.grid.distance(current_pos, p) for p in parcels]
+        distances = [self.get_distance(current_pos, p) for p in parcels]
         nearest_parcel = parcels[np.argmin(distances)]
 
         return nearest_parcel
+
+    # Asumiendo que movimientos en diagonal no están permitidos. Si sí, cambiar esto a Euclidian 
+    def get_distance(self, pos1, pos2):
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
     def harvest(self, parcel_pos):
         # Cosechar la parcela en la posición dada
@@ -102,3 +107,54 @@ class TractorAgent(ap.Agent):
     def refuel(self):
         # Recargar combustible en la estación de recarga
         self.fuel_level = self.p.max_fuel
+    
+    def a_star_path(self, start, goal):
+        # A* algorithm implementation
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+        f_score = {start: self.heuristic(start, goal)}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                return self.reconstruct_path(came_from, current)
+
+            for neighbor in self.get_neighbors(current):
+                tentative_g_score = g_score[current] + 1
+
+                if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
+                    if neighbor not in [i[1] for i in open_set]:
+                        heapq.heappush(open_set, (f_score[neighbor], neighbor))
+
+        return [start]  # Return a path containing only the start if no path found
+
+    def heuristic(self, pos1, pos2):
+        # Manhattan distance heuristic
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+    def get_neighbors(self, pos):
+    # Get neighboring positions (up, down, left, right)
+        neighbors = []
+        x, y = pos
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neighbor = (x + dx, y + dy)
+            if (0 <= neighbor[0] < self.grid.shape[0] and 
+                0 <= neighbor[1] < self.grid.shape[1] and 
+                neighbor not in self.grid.positions):  # Check that the cell is empty
+                neighbors.append(neighbor)
+        return neighbors
+
+
+    def reconstruct_path(self, came_from, current):
+        # Reconstruct the path from start to goal
+        path = [current]
+        while current in came_from:
+            current = came_from[current]
+            path.append(current)
+        return path[::-1]  # Return reversed path
