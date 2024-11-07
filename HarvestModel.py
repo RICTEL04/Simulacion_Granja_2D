@@ -56,11 +56,14 @@ class HarvestModel(ap.Model):
 
         # Set a refuel station at a random perimeter position
         self.refuel_station = random.choice(perimeter_cells)
+        self.state_grid[self.refuel_station] = 'refuel_station'  # Mark in state grid
 
         print(f"Refuel station set at: {self.refuel_station}")
 
         # Set an unload point on the opposite side of the grid
         self.unload_point = random.choice(perimeter_cells)
+        self.state_grid[self.unload_point] = 'unload_point'  # Mark in state grid
+
         print(f"Unload point set at: {self.unload_point}")
 
     def step(self):

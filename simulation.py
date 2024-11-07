@@ -31,57 +31,64 @@ model = HarvestModel(parameters)
 
 # Visualización
 def plot_field(model, ax):
-    ax.clear()  # Limpiar el eje al inicio
+    ax.clear()  # Clear the axis for each frame
 
-    # Generate a color-mapped grid from the `state_grid`
-    state_grid = np.vectorize({
-        'empty': 0,
-        'ready_to_harvest': 1,
-        'harvested': 2
-    }.get)(model.state_grid)
-    
-    # Plot the grid with colors for each state
-    ap.gridplot(state_grid, cmap='YlGn', ax=ax)
-
-    ##Cultivos
+    # Map the state_grid to integer values for colors
     state_to_int = {
         'empty': 0,
         'ready_to_harvest': 1,
-        'harvested': 2
+        'harvested': 2,
+        'refuel_station': 3,
+        'unload_point': 4
     }
-    # Convertir la matriz de estados a valores numéricos
-    state_grid_numeric = np.vectorize(state_to_int.get)(model.state_grid).astype(int)
-    #print(model.state_grid)
-    # Crear el cmap con los colores correspondientes
-    cmap = mcolors.ListedColormap(['#d2b48c', 'green', 'gray'])
+    state_grid_numeric = np.vectorize(state_to_int.get)(model.state_grid)
 
-    bounds = [0, 1, 2, 3]  # Definir límites para los valores de los estados
+    # Create a color map for the states
+    cmap = mcolors.ListedColormap(['#d2b48c', 'green', 'gray', 'blue', 'purple'])
+    bounds = [0, 1, 2, 3, 4, 5]  # Define boundaries for each color
     norm = mcolors.BoundaryNorm(bounds, cmap.N)
 
-    # Mostrar la cuadrícula con los colores correspondientes
+    # Plot the grid with updated colors
     ax.imshow(state_grid_numeric, cmap=cmap, norm=norm)
-    
 
-    ##Tractores
-    # Add tractor positions to the plot
+    # Plot tractor positions
     x_coords = [model.grid.positions[agent][0] for agent in model.tractors if agent in model.grid.positions]
     y_coords = [model.grid.positions[agent][1] for agent in model.tractors if agent in model.grid.positions]
     ax.scatter(x_coords, y_coords, c='red', s=100, label='Tractores')
-    
-    ##Cuadricula
-    # Añadir cuadrícula visible y ajustar los ticks
-    ax.set_xticks(np.arange(-0.5, parameters['field_size'], 1), minor=True)
-    ax.set_yticks(np.arange(-0.5, parameters['field_size'], 1), minor=True)
+
+    # Custom legend for the plot
+    legend_elements = [
+        plt.Line2D([0], [0], marker='s', color='w', label='Parcela Vacía', markersize=10, 
+                   markerfacecolor='#d2b48c'),
+        plt.Line2D([0], [0], marker='s', color='w', label='Lista para Cosechar', markersize=10, 
+                   markerfacecolor='green'),
+        plt.Line2D([0], [0], marker='s', color='w', label='Cosechada', markersize=10, 
+                   markerfacecolor='gray'),
+        plt.Line2D([0], [0], marker='s', color='w', label='Punto de Recarga', markersize=10, 
+                   markerfacecolor='blue'),
+        plt.Line2D([0], [0], marker='s', color='w', label='Punto de Descarga', markersize=10, 
+                   markerfacecolor='purple'),
+        plt.Line2D([0], [0], marker='o', color='w', label='Tractor', markersize=10, 
+                   markerfacecolor='red')
+    ]
+
+    # Add the legend to the plot
+    ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5), title="Leyenda")
+
+
+    # Add grid lines and other plot details
+    ax.set_xticks(np.arange(-0.5, model.p['field_size'], 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, model.p['field_size'], 1), minor=True)
     ax.grid(which='minor', color='gray', linestyle='-', linewidth=0.5)
 
-    # Add a title and other plot details
-    ax.legend(loc='upper right')
-    ax.set_title(f"Paso {model.t}")
+    # Add title and remove default ticks
+    ax.set_title(f"Step {model.t}")
     ax.set_xticks([])
     ax.set_yticks([])
 
 
-fig, ax = plt.subplots(figsize=(6,6))
+fig, ax = plt.subplots(figsize=(8,6))
+fig.tight_layout(rect=[0, 0, 0.85, 1])  # Add space on the right for the legend
 animation = ap.animate(model, fig, ax, plot_field)
 
 # Guardar la animación como un archivo MP4
