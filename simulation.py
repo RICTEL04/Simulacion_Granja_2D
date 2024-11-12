@@ -11,8 +11,8 @@ from HarvestModel import HarvestModel
 parameters = {
     'field_size': 20,
     'num_tractors': 3,
-    'capacity': 30,
-    'max_fuel': 500,
+    'capacity': 40,
+    'max_fuel': 470,
     'fuel_consumption_rate': 1,
     'fuel_threshold': 10,
     'speed': 2,

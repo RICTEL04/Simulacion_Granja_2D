@@ -1,4 +1,3 @@
-
 import agentpy as ap
 import numpy as np
 import random
@@ -89,8 +88,11 @@ class TractorAgent(ap.Agent):
                 else:
                     self.harvest(target)
 
-    def assign_section(self, section):
+    def assign_section(self, section, margin=2):
+        """ Asigna una sección al tractor y le da un margen de extensión.
+            El margen define cuántas celdas adicionales puede recorrer fuera de su sección. """
         self.section = section
+        self.section_margin = margin  # Definir margen de extensión
 
     def find_nearest_parcel(self):
         # Encontrar la parcela más cercana lista para cosechar en la sección asignada
@@ -113,12 +115,17 @@ class TractorAgent(ap.Agent):
         return nearest_parcel
 
     def is_in_section(self, pos):
-        # Verificar si una posición está en la sección asignada
+        """ Verifica si una posición está en la sección asignada con margen extendido. """
         section_size = self.model.grid.shape[0] // self.model.p.num_tractors
         section_start = self.section * section_size
         section_end = section_start + section_size
-        return section_start <= pos[0] < section_end
 
+        # Añadir el margen extendido a los límites de la sección
+        extended_start = max(0, section_start - self.section_margin)
+        extended_end = min(self.model.grid.shape[0], section_end + self.section_margin)
+
+        # Verificar si la posición está dentro de los límites ampliados de la sección
+        return extended_start <= pos[0] < extended_end
 
     # Asumiendo que movimientos en diagonal no están permitidos. Si sí, cambiar esto a Euclidian 
     def get_distance(self, pos1, pos2):
@@ -170,7 +177,7 @@ class TractorAgent(ap.Agent):
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
     def get_neighbors(self, pos):
-    # Get neighboring positions (up, down, left, right)
+        # Get neighboring positions (up, down, left, right)
         neighbors = []
         x, y = pos
         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -180,7 +187,6 @@ class TractorAgent(ap.Agent):
                 neighbor not in self.grid.positions):  # Check that the cell is empty
                 neighbors.append(neighbor)
         return neighbors
-
 
     def reconstruct_path(self, came_from, current):
         # Reconstruct the path from start to goal
