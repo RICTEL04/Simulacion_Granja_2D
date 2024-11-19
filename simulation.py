@@ -9,7 +9,7 @@ from HarvestModel import HarvestModel
 
 # Definir los parámetros
 parameters = {
-    'field_size': 20,
+    'field_size': 50,
     'num_tractors': 3,
     'capacity': 10,
     'max_fuel': 100,
@@ -92,5 +92,8 @@ animation = ap.animate(model, fig, ax, plot_field)
 
 # Save the animation as an MP4 file with a duration that reflects the number of frames
 animation.save("harvest_simulation.mp4", writer="ffmpeg", fps=5)  # Adjust fps as needed for smoother video
+
+# Aprender y guardar las tablas Q para la siguiente interacion
+model.save_q_tables()
 
 print("Animación guardada como 'harvest_simulation.mp4'")

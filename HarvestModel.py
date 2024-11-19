@@ -115,6 +115,10 @@ class HarvestModel(ap.Model):
 
             # Optionally, close the figure to free up memory if running many tractors
             plt.close(fig)
+    
+    def save_q_tables(self):
+        for tractor in self.tractors:
+            tractor.save_q_table()
 
 
     def end(self):
