@@ -39,18 +39,27 @@ car_positions_y = [-1.5, -2]
 
 # Puntos de los caminos para ambos carros (puedes ajustar estos puntos según tus necesidades)
 car_paths = [
-    [(-3, -1.5), 
-     (target_x[5], target_y[5]), 
-     (0,-1.5),
+    [(-3, -1.5),                
+     (target_x[5], target_y[5]),
+     (0,-1.5),                      
      (target_x[2],target_y[2]),
-     (2, 2)],
+     (target_x[1],target_y[1]),
+     (target_x[0],target_y[0]),
+     (target_x[3],target_y[3]),
+     (target_x[4],target_y[4]),
+     (target_x[6],target_y[6])],
 
 
 
     [(0, -2), 
      (1.4,-1.5),
-     (target_x[6],target_y[6]), 
-     (3, 1)]
+     (target_x[6],target_y[6]),
+     (target_x[4],target_y[4]),
+     (target_x[3],target_y[3]),
+     (target_x[1],target_y[1]), 
+     (target_x[2],target_y[2]),
+     (target_x[0],target_y[0]),
+     (target_x[5],target_y[5])]
 ]
 
 # Obstáculos (x1, x2, x3, x4) y (y1, y2, y3, y4)
@@ -87,14 +96,15 @@ for obs in obstacles:
 car_scatters = [ax.plot([], [], 'bo', markersize=8)[0] for _ in range(2)]
 
 #Objetivos de la animacion
-for x,y in zip(target_x, target_y):
+for i, (x,y) in enumerate(zip(target_x, target_y)):
     ax.plot(x, y, 'go', markersize=6)
+    ax.text(x -0.1,y + 0.15,i, color= 'red', fontsize= 10)
 
 #Camino
 for i,(x,y) in enumerate(car_paths[0]):
-    ax.text(x, y, i,fontsize=10, color = "cyan")
+    ax.text(x, y, i,fontsize=10, color = "black")
 for i, (x,y) in enumerate(car_paths[1]):
-    ax.text(x,y, i, fontsize=10, color= "orange")
+    ax.text(x  + 0.15,y, i, fontsize=10, color= "blue")
 
 def update(frame):
     global car_positions_x, car_positions_y, stop_flags
