@@ -18,15 +18,15 @@ parameters = {
     'speed': 1,
     'harvest_amount': 1,
     'initial_ready_fraction': 0.2,
-    'breakdown_chance': 0.01,
+    'breakdown_chance': 0.005,
     'repair_steps': 3,
     'growth_chance': 0.01,
     'wither_chance': 0.005,
-    'steps': 100,
+    'steps': 500,
     'seed': 42
 }
 model = HarvestModel(parameters)
-# model.run()  # Descomentar esto para generar graficas
+#model.run()  # Descomentar esto para generar graficas
 
 # Visualización
 def plot_field(model, ax):
