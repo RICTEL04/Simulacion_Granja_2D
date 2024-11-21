@@ -23,7 +23,7 @@ def load_obstacles_from_file(filename, obstacles_list):
         with open(filename, 'r') as file:
             x =  [float(a)  for a in file.readline().split(',')]
             y =  [float(a) for a in file.readline().split(',')]
-            obstacles_list.append([(x[0],x[1],x[2],x[3]),(y[0],y[1],y[2],y[3])]) #y
+            obstacles_list.append([[x[0],x[1],x[2],x[3]],[y[0],y[1],y[2],y[3]]]) #y
     except Exception as e:
         print(f"Error al cargar el archivo: {e}")
 
@@ -54,11 +54,22 @@ car_paths = [
     [(0, -2), 
      (1.4,-1.5),
      (target_x[6],target_y[6]),
+     (1.6,0.5),
      (target_x[4],target_y[4]),
+     (-0,0.8),
+     (-0.5, 1.2),
+     (-0.5, 1.5),
      (target_x[3],target_y[3]),
+     (-0.5,1.5),
+     (-0.5,1.2),
      (target_x[1],target_y[1]), 
+     (0,0.2),
+     (0,-0.4),
      (target_x[2],target_y[2]),
+     (0,-1),
+     (-1, -0.7),
      (target_x[0],target_y[0]),
+     (-2,-0.5),
      (target_x[5],target_y[5])]
 ]
 
@@ -87,22 +98,43 @@ ax.set_xlim(-3, 3)
 ax.set_ylim(-2, 2)
 
 # Dibujar obstáculos
-for obs in obstacles:
+for i, obs in enumerate(obstacles):
     x, y = obs
-    rect = Rectangle((x[0], y[0]), x[2] - x[0], y[2] - y[0], color="red", alpha=1)
-    ax.add_patch(rect)
+    # Cerrar el polígono conectando el último punto con el primero
+    x_closed = x + [x[0]]
+    y_closed = y + [y[0]]
 
+    l = ["A",'B','C','D',"A","B"]
+    v = ["a","b","c","d","a"]
+    for j,(xx, yy) in enumerate(zip(x,y)):
+        print(f"{l[j]}{i}=({xx},{yy})")
+    print(f"tl{i} = Polígono(A{i}, B{i}, C{i}, D{i})")
+    for j in range(i):
+        print(f"{v[j]}{i} = Segmento({l[j]}, {l[j+1]}, tl{i})")
+    
+    ax.plot(x_closed, y_closed, 'r-', linewidth=3, alpha=1)  # Líneas rojas
+    
 # Variables para la animación
 car_scatters = [ax.plot([], [], 'bo', markersize=8)[0] for _ in range(2)]
 
 #Objetivos de la animacion
 for i, (x,y) in enumerate(zip(target_x, target_y)):
+    print(f"OBJ{i} = ({x},{y})")
     ax.plot(x, y, 'go', markersize=6)
     ax.text(x -0.1,y + 0.15,i, color= 'red', fontsize= 10)
 
 #Camino
+# Trazar el camino de car_paths[0] con líneas
+path_x_0, path_y_0 = zip(*car_paths[0])  # Extraer coordenadas x e y del primer camino
+ax.plot(path_x_0, path_y_0, 'k-', linewidth=1.5, label="Camino Carro 0", alpha = 0.3)  # Línea negra
+
 for i,(x,y) in enumerate(car_paths[0]):
     ax.text(x, y, i,fontsize=10, color = "black")
+
+# Trazar el camino de car_paths[1] con líneas
+path_x_1, path_y_1 = zip(*car_paths[1])  # Extraer coordenadas x e y del segundo camino
+ax.plot(path_x_1, path_y_1, 'b-', linewidth=1.5, label="Camino Carro 1", alpha = 0.3)  # Línea azul
+
 for i, (x,y) in enumerate(car_paths[1]):
     ax.text(x  + 0.15,y, i, fontsize=10, color= "blue")
 
